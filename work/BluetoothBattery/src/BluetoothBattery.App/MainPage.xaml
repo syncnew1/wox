@@ -9,8 +9,9 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
 
-    <Grid Padding="20" RowSpacing="16">
+    <Grid Padding="20" RowSpacing="14">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -30,14 +31,20 @@
                     Text="无线设备电量" />
                 <TextBlock
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="蓝牙与 2.4G 设备电量监控" />
+                    Text="只读识别蓝牙与 2.4G 无线设备电量，不修改设备设置" />
             </StackPanel>
 
             <Button
+                x:Name="RefreshButton"
                 Grid.Column="1"
                 MinWidth="96"
                 Click="RefreshButton_Click"
-                Content="刷新" />
+                ToolTipService.ToolTip="立即刷新设备电量">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="Refresh" />
+                    <TextBlock Text="刷新" />
+                </StackPanel>
+            </Button>
         </Grid>
 
         <Grid Grid.Row="1" ColumnSpacing="8">
@@ -69,42 +76,86 @@
             </Border>
         </Grid>
 
+        <Grid Grid.Row="2" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <ToggleSwitch
+                x:Name="AutoRefreshSwitch"
+                Header="自动刷新"
+                IsOn="True"
+                OffContent="关闭"
+                OnContent="开启"
+                Toggled="AutoRefreshSwitch_Toggled" />
+
+            <ProgressRing
+                x:Name="RefreshProgress"
+                Grid.Column="1"
+                Width="24"
+                Height="24"
+                VerticalAlignment="Center"
+                IsActive="False"
+                Visibility="Collapsed" />
+
+            <TextBlock
+                x:Name="LastRefreshText"
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="尚未刷新" />
+        </Grid>
+
         <ListView
             x:Name="DeviceList"
-            Grid.Row="2"
+            Grid.Row="3"
             IsItemClickEnabled="False"
             SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:DeviceRow">
-                    <Grid Padding="4,8" ColumnSpacing="12">
+                    <Grid Padding="4,10" ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="170" />
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Spacing="2">
                             <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" />
                             <TextBlock
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="{x:Bind StableId}" />
+                                Text="{x:Bind Kind}" />
                             <TextBlock
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="{x:Bind Presence}" />
+                                Text="{x:Bind StableId}" />
                         </StackPanel>
 
-                        <TextBlock
+                        <StackPanel
                             Grid.Column="1"
                             VerticalAlignment="Center"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="{x:Bind Kind}" />
+                            Spacing="4">
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Text="{x:Bind Battery}" />
+                            <ProgressBar
+                                Maximum="100"
+                                Minimum="0"
+                                Value="{x:Bind BatteryValue}" />
+                        </StackPanel>
 
-                        <TextBlock
+                        <StackPanel
                             Grid.Column="2"
-                            HorizontalAlignment="Right"
                             VerticalAlignment="Center"
-                            FontWeight="SemiBold"
-                            Text="{x:Bind Battery}" />
+                            Spacing="2">
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind BatterySource}" />
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind BatteryMeta}" />
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -112,7 +163,7 @@
 
         <TextBlock
             x:Name="StatusText"
-            Grid.Row="3"
+            Grid.Row="4"
             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
             Text="就绪" />
     </Grid>
