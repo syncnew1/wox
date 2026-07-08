@@ -8,11 +8,13 @@ var outputJson = GetOptionValue(args, "--json");
 var configPath = GetOptionValue(args, "--config") ?? Path.Combine("work", "BluetoothBattery", "config", "devices.json");
 var timeoutSeconds = GetIntOptionValue(args, "--timeout-seconds", 30);
 var bleBatteryAddress = GetOptionValue(args, "--ble-battery");
+var razerViperV2Battery = args.Any(arg => string.Equals(arg, "--razer-viper-v2-battery", StringComparison.OrdinalIgnoreCase));
 var raw = args.Any(arg => string.Equals(arg, "--raw", StringComparison.OrdinalIgnoreCase));
 var deep = args.Any(arg => string.Equals(arg, "--deep", StringComparison.OrdinalIgnoreCase));
 var all = args.Any(arg => string.Equals(arg, "--all", StringComparison.OrdinalIgnoreCase));
 var connectedOnly = args.Any(arg => string.Equals(arg, "--connected-only", StringComparison.OrdinalIgnoreCase));
 var summaryOnly = args.Any(arg => string.Equals(arg, "--summary", StringComparison.OrdinalIgnoreCase));
+var providerDiagnostics = args.Any(arg => string.Equals(arg, "--provider-diagnostics", StringComparison.OrdinalIgnoreCase));
 var writeSampleConfig = args.Any(arg => string.Equals(arg, "--write-sample-config", StringComparison.OrdinalIgnoreCase));
 var help = args.Any(arg => arg is "-h" or "--help");
 
@@ -54,6 +56,23 @@ try
         return 0;
     }
 
+    if (razerViperV2Battery)
+    {
+        var result = new RazerBatteryProbe().TryReadViperV2ProWithDiagnostics(timeout.Token);
+        if (result.Reading is null)
+        {
+            Console.WriteLine("No Razer Viper V2 Pro battery reading.");
+            foreach (var attempt in result.Attempts)
+            {
+                Console.WriteLine($"  {attempt}");
+            }
+            return 2;
+        }
+
+        Console.WriteLine($"{result.Reading.Percentage}% ({result.Reading.Source}, {result.Reading.Confidence})");
+        return 0;
+    }
+
     Console.Error.WriteLine(deep
         ? "Deep scanning Windows wireless devices and battery properties..."
         : "Fast scanning Windows wireless devices (Bluetooth + 2.4G HID)...");
@@ -75,7 +94,11 @@ try
     }
     devices = await new DeviceBatteryEnricher().EnrichAsync(devices, timeout.Token);
 
-    if (raw)
+    if (providerDiagnostics)
+    {
+        PrintProviderDiagnostics(devices);
+    }
+    else if (raw)
     {
         Console.WriteLine(PnpDeviceScanner.ToJson(devices));
     }
@@ -183,6 +206,30 @@ static void PrintSummary(IReadOnlyList<BluetoothBattery.Core.Models.BluetoothDev
     }
 }
 
+static void PrintProviderDiagnostics(IReadOnlyList<BluetoothBattery.Core.Models.BluetoothDeviceSnapshot> devices)
+{
+    var diagnostics = new BatteryProviderDiagnostics().Analyze(devices);
+    if (diagnostics.Count == 0)
+    {
+        Console.WriteLine("No provider diagnostics available.");
+        return;
+    }
+
+    foreach (var group in diagnostics.GroupBy(item => item.StableId))
+    {
+        var first = group.First();
+        Console.WriteLine(first.DisplayName);
+        Console.WriteLine($"  Kind:      {first.Kind}");
+        Console.WriteLine($"  Stable ID: {first.StableId}");
+        foreach (var item in group)
+        {
+            Console.WriteLine($"  - {item.Provider}: {item.Status}");
+            Console.WriteLine($"    {item.Details}");
+        }
+        Console.WriteLine();
+    }
+}
+
 static void PrintHelp()
 {
     Console.WriteLine("BluetoothBattery.Cli");
@@ -201,9 +248,13 @@ static void PrintHelp()
     Console.WriteLine("  --all          Include hidden low-level interfaces and transport devices.");
     Console.WriteLine("  --connected-only");
     Console.WriteLine("                 Show only high-confidence active devices.");
+    Console.WriteLine("  --provider-diagnostics");
+    Console.WriteLine("                 Show which battery providers can handle each device.");
     Console.WriteLine("  --deep         Also query slow Windows PnP battery properties.");
     Console.WriteLine("  --ble-battery <Bluetooth address>");
     Console.WriteLine("                 Directly read standard BLE GATT battery level.");
+    Console.WriteLine("  --razer-viper-v2-battery");
+    Console.WriteLine("                 Read-only battery query for Razer Viper V2 Pro.");
     Console.WriteLine("  --timeout-seconds <n>");
     Console.WriteLine("                 Stop scanning after n seconds. Default: 30.");
 }

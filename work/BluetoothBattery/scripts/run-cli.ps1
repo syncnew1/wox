@@ -6,9 +6,11 @@ param(
     [switch]$All,
     [switch]$ConnectedOnly,
     [switch]$Summary,
+    [switch]$ProviderDiagnostics,
     [switch]$WriteSampleConfig,
     [switch]$Help,
     [string]$BleBatteryAddress,
+    [switch]$RazerViperV2Battery,
     [int]$TimeoutSeconds = 30,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ExtraArgs
@@ -56,6 +58,10 @@ if ($ConnectedOnly) {
     $arguments += '--connected-only'
 }
 
+if ($ProviderDiagnostics) {
+    $arguments += '--provider-diagnostics'
+}
+
 if ($TimeoutSeconds -gt 0) {
     $arguments += '--timeout-seconds'
     $arguments += [string]$TimeoutSeconds
@@ -74,6 +80,10 @@ if ($ConfigPath) {
 if ($BleBatteryAddress) {
     $arguments += '--ble-battery'
     $arguments += $BleBatteryAddress
+}
+
+if ($RazerViperV2Battery) {
+    $arguments += '--razer-viper-v2-battery'
 }
 
 & $dotnet @arguments

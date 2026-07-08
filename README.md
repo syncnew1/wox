@@ -85,6 +85,12 @@ work/BluetoothBattery/
 .\work\BluetoothBattery\scripts\run-cli.ps1 -BleBatteryAddress E4:81:AC:8B:3B:AC
 ```
 
+查看每个设备可能适用的电量 Provider：
+
+```powershell
+.\work\BluetoothBattery\scripts\run-cli.ps1 -ConnectedOnly -ConfigPath work\BluetoothBattery\config\devices.json -ProviderDiagnostics
+```
+
 ## 设备配置
 
 生成示例配置：
@@ -139,3 +145,5 @@ work/BluetoothBattery/
 默认扫描模式较快，主要用于列出真实用户设备。`-Deep` 会额外尝试读取 Windows PnP 电量属性，部分机器或设备上可能较慢。
 
 标准 BLE 电量服务已经可用。如果蓝牙设备支持 `0000180F/00002A19`，CLI 和 WinUI 会优先显示该电量。很多 2.4G 接收器和部分设备不会通过 Windows 标准属性公开电量。对于这类设备，需要后续实现厂商协议 Provider，例如 Razer、ASUS ROG、Logitech HID++ 等。
+
+更多设备支持路线见 `work/BluetoothBattery/docs/provider-research.md`。
