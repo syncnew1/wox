@@ -1,10 +1,13 @@
+using BluetoothBattery.Core.Battery;
 using BluetoothBattery.Core.Configuration;
+using BluetoothBattery.Core.Models;
 using BluetoothBattery.Core.Pnp;
 using BluetoothBattery.Core.Reporting;
 
 var outputJson = GetOptionValue(args, "--json");
 var configPath = GetOptionValue(args, "--config") ?? Path.Combine("work", "BluetoothBattery", "config", "devices.json");
 var timeoutSeconds = GetIntOptionValue(args, "--timeout-seconds", 30);
+var bleBatteryAddress = GetOptionValue(args, "--ble-battery");
 var raw = args.Any(arg => string.Equals(arg, "--raw", StringComparison.OrdinalIgnoreCase));
 var deep = args.Any(arg => string.Equals(arg, "--deep", StringComparison.OrdinalIgnoreCase));
 var all = args.Any(arg => string.Equals(arg, "--all", StringComparison.OrdinalIgnoreCase));
@@ -30,6 +33,27 @@ try
 
     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
 
+    if (!string.IsNullOrWhiteSpace(bleBatteryAddress))
+    {
+        var provider = new BleGattBatteryProvider();
+        var reading = await provider.TryReadAsync(
+            new BatteryReadContext(
+                $"bt:{bleBatteryAddress}",
+                bleBatteryAddress,
+                bleBatteryAddress,
+                Array.Empty<RawPnpDevice>()),
+            timeout.Token);
+
+        if (reading is null)
+        {
+            Console.WriteLine($"No BLE GATT battery reading from {bleBatteryAddress}.");
+            return 2;
+        }
+
+        Console.WriteLine($"{reading.Percentage}% ({reading.Source}, {reading.Confidence})");
+        return 0;
+    }
+
     Console.Error.WriteLine(deep
         ? "Deep scanning Windows wireless devices and battery properties..."
         : "Fast scanning Windows wireless devices (Bluetooth + 2.4G HID)...");
@@ -49,6 +73,7 @@ try
             .Where(device => device.Presence >= BluetoothBattery.Core.Models.DevicePresence.LikelyActive)
             .ToArray();
     }
+    devices = await new DeviceBatteryEnricher().EnrichAsync(devices, timeout.Token);
 
     if (raw)
     {
@@ -177,6 +202,8 @@ static void PrintHelp()
     Console.WriteLine("  --connected-only");
     Console.WriteLine("                 Show only high-confidence active devices.");
     Console.WriteLine("  --deep         Also query slow Windows PnP battery properties.");
+    Console.WriteLine("  --ble-battery <Bluetooth address>");
+    Console.WriteLine("                 Directly read standard BLE GATT battery level.");
     Console.WriteLine("  --timeout-seconds <n>");
     Console.WriteLine("                 Stop scanning after n seconds. Default: 30.");
 }

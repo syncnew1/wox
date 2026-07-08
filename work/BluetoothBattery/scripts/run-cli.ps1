@@ -8,6 +8,7 @@ param(
     [switch]$Summary,
     [switch]$WriteSampleConfig,
     [switch]$Help,
+    [string]$BleBatteryAddress,
     [int]$TimeoutSeconds = 30,
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$ExtraArgs
@@ -68,6 +69,11 @@ if ($JsonPath) {
 if ($ConfigPath) {
     $arguments += '--config'
     $arguments += $ConfigPath
+}
+
+if ($BleBatteryAddress) {
+    $arguments += '--ble-battery'
+    $arguments += $BleBatteryAddress
 }
 
 & $dotnet @arguments

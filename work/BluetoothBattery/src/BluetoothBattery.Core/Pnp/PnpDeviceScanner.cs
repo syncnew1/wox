@@ -1,20 +1,11 @@
-using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
-using BluetoothBattery.Core.Battery;
 using BluetoothBattery.Core.Models;
+using BluetoothBattery.Core.Windows;
 
 namespace BluetoothBattery.Core.Pnp;
 
 public sealed class PnpDeviceScanner
 {
-    private static readonly CompositeBatteryProvider BatteryProvider = new(
-    [
-        new PnpPropertyBatteryProvider(),
-        new PlannedProvider("BLE GATT Battery Service", 200),
-        new PlannedProvider("Vendor-specific HID provider", 300)
-    ]);
-
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true,
@@ -78,7 +69,7 @@ public sealed class PnpDeviceScanner
 
     private static async Task<IReadOnlyList<RawPnpDevice>> ReadRawDevicesAsync(CancellationToken cancellationToken)
     {
-        var stdout = await RunPowerShellAsync(FastScanScript, null, cancellationToken).ConfigureAwait(false);
+        var stdout = await PowerShellRunner.RunAsync(FastScanScript, null, cancellationToken).ConfigureAwait(false);
         return string.IsNullOrWhiteSpace(stdout) ? [] : DeserializeRawDevices(stdout);
     }
 
@@ -204,7 +195,7 @@ public sealed class PnpDeviceScanner
 
             try
             {
-                var stdout = await RunPowerShellAsync(
+                var stdout = await PowerShellRunner.RunAsync(
                     BatteryPropertyScript,
                     new Dictionary<string, string>
                     {
@@ -277,61 +268,6 @@ public sealed class PnpDeviceScanner
         }
 
         return properties;
-    }
-
-    private static async Task<string> RunPowerShellAsync(
-        string script,
-        IReadOnlyDictionary<string, string>? environment,
-        CancellationToken cancellationToken)
-    {
-        var psi = new ProcessStartInfo
-        {
-            FileName = "powershell.exe",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        psi.ArgumentList.Add("-NoProfile");
-        psi.ArgumentList.Add("-ExecutionPolicy");
-        psi.ArgumentList.Add("Bypass");
-        psi.ArgumentList.Add("-Command");
-        psi.ArgumentList.Add(script);
-
-        if (environment is not null)
-        {
-            foreach (var item in environment)
-            {
-                psi.Environment[item.Key] = item.Value;
-            }
-        }
-
-        using var process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start PowerShell.");
-        Task<string> stdoutTask;
-        Task<string> stderrTask;
-        try
-        {
-            stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            TryKill(process);
-            throw;
-        }
-
-        var stdout = await stdoutTask.ConfigureAwait(false);
-        var stderr = await stderrTask.ConfigureAwait(false);
-
-        if (process.ExitCode != 0)
-        {
-            throw new InvalidOperationException($"PowerShell device scan failed with exit code {process.ExitCode}: {stderr}");
-        }
-
-        return stdout;
     }
 
     private static IReadOnlyList<RawPnpDevice> DeserializeRawDevices(string json)
@@ -410,18 +346,22 @@ public sealed class PnpDeviceScanner
             .Select(device => GetProperty(device, "System.Devices.ContainerId") ?? GetProperty(device, "DEVPKEY_Device_ContainerId"))
             .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 
+        var displayName = DeviceNameResolver.Resolve(devices);
+        var presence = ResolvePresence(stableId, devices);
+        var isUserFacing = IsUserFacing(stableId, devices, presence, displayName);
+
         return new BluetoothDeviceSnapshot
         {
             StableId = stableId,
-            DisplayName = DeviceNameResolver.Resolve(devices),
+            DisplayName = displayName,
             BluetoothAddress = address,
             ContainerId = containerId,
             Kind = ResolveKind(devices),
-            IsConnected = ResolvePresence(stableId, devices) >= DevicePresence.LikelyActive,
-            IsUserFacing = IsUserFacing(stableId, devices),
-            Presence = ResolvePresence(stableId, devices),
-            Evidence = ResolveEvidence(stableId, devices),
-            Battery = ReadBattery(stableId, devices),
+            IsConnected = presence >= DevicePresence.LikelyActive,
+            IsUserFacing = isUserFacing,
+            Presence = presence,
+            Evidence = ResolveEvidence(presence),
+            Battery = null,
             LastSeenAt = now,
             Interfaces = devices
         };
@@ -462,9 +402,8 @@ public sealed class PnpDeviceScanner
         return DevicePresence.PairedOnly;
     }
 
-    private static string ResolveEvidence(string stableId, IReadOnlyList<RawPnpDevice> devices)
+    private static string ResolveEvidence(DevicePresence presence)
     {
-        var presence = ResolvePresence(stableId, devices);
         return presence switch
         {
             DevicePresence.LikelyActive => "active heuristic: named input device",
@@ -476,29 +415,26 @@ public sealed class PnpDeviceScanner
         };
     }
 
-    private static BatteryReading? ReadBattery(string stableId, IReadOnlyList<RawPnpDevice> devices)
-    {
-        var context = new BatteryReadContext(
-            stableId,
-            DeviceNameResolver.Resolve(devices),
-            devices.Select(device => DeviceIdentity.ExtractBluetoothAddress(device.InstanceId))
-                .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)),
-            devices);
-        return BatteryProvider.TryReadAsync(context, CancellationToken.None)
-            .AsTask()
-            .GetAwaiter()
-            .GetResult();
-    }
-
     private static bool IsUserFacing(string stableId, IReadOnlyList<RawPnpDevice> devices)
     {
-        var name = DeviceNameResolver.Resolve(devices);
+        return IsUserFacing(
+            stableId,
+            devices,
+            ResolvePresence(stableId, devices),
+            DeviceNameResolver.Resolve(devices));
+    }
+
+    private static bool IsUserFacing(
+        string stableId,
+        IReadOnlyList<RawPnpDevice> devices,
+        DevicePresence presence,
+        string name)
+    {
         if (IsSystemOrTransportNoiseName(name))
         {
             return false;
         }
 
-        var presence = ResolvePresence(stableId, devices);
         if (presence >= DevicePresence.LikelyActive)
         {
             return true;
@@ -578,20 +514,6 @@ public sealed class PnpDeviceScanner
         }
 
         return "Bluetooth";
-    }
-
-    private static void TryKill(Process process)
-    {
-        try
-        {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-            }
-        }
-        catch
-        {
-        }
     }
 
     private static string? GetProperty(RawPnpDevice device, string key)

@@ -1,4 +1,5 @@
 using BluetoothBattery.Core.Configuration;
+using BluetoothBattery.Core.Battery;
 using BluetoothBattery.Core.Models;
 using BluetoothBattery.Core.Pnp;
 using BluetoothBattery.Core.Reporting;
@@ -44,6 +45,7 @@ public sealed partial class MainPage : Page
             devices = devices
                 .Where(device => device.Presence >= DevicePresence.LikelyActive)
                 .ToArray();
+            devices = await new DeviceBatteryEnricher().EnrichAsync(devices, timeout.Token);
 
             var summary = DeviceSummary.Create(devices);
             DeviceCountText.Text = summary.Total.ToString();
