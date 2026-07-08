@@ -1,0 +1,62 @@
+{
+  "devices": [
+    {
+      "stableId": "bt:E4:81:AC:8B:3B:AC",
+      "nameContains": null,
+      "alias": "ROG FALCHION RX LOW PROFILE",
+      "kind": "Keyboard",
+      "hidden": null,
+      "forceShow": true,
+      "forceConnected": true,
+      "notes": "Keyboard is currently used over Bluetooth"
+    },
+    {
+      "stableId": "usb:VID_1532\u0026PID_00A6",
+      "nameContains": null,
+      "alias": "Razer Viper V2 Pro",
+      "kind": "Mouse",
+      "hidden": null,
+      "forceShow": true,
+      "forceConnected": true,
+      "notes": "2.4G receiver / wired USB composite device"
+    },
+    {
+      "stableId": null,
+      "nameContains": "XINPUT",
+      "alias": null,
+      "kind": null,
+      "hidden": true,
+      "forceShow": null,
+      "forceConnected": null,
+      "notes": "Paired gamepad history interface; hide unless explicitly enabled"
+    },
+    {
+      "stableId": null,
+      "nameContains": "Xbox",
+      "alias": null,
+      "kind": null,
+      "hidden": true,
+      "forceShow": null,
+      "forceConnected": null,
+      "notes": "Paired gamepad history interface; hide unless explicitly enabled"
+    },
+    {
+      "stableId": null,
+      "nameContains": "ROG OMNI RECEIVER",
+      "alias": null,
+      "kind": null,
+      "hidden": true,
+      "forceShow": null,
+      "forceConnected": null,
+      "notes": "Keyboard receiver is plugged in, but keyboard is currently used over Bluetooth"
+    },
+    {
+      "stableId": null,
+      "nameContains": "Zako Virtual Mouse",
+      "alias": null,
+      "kind": null,
+      "hidden": true,
+      "notes": "Example hidden virtual device"
+    }
+  ]
+}

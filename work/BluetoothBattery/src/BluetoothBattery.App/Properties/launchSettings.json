@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "BluetoothBattery.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "BluetoothBattery.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

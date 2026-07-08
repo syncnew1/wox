@@ -1,0 +1,40 @@
+{
+  "devices": [
+    {
+      "stableId": "bt:E4:81:AC:8B:3B:AC",
+      "alias": "ROG FALCHION RX LOW PROFILE",
+      "kind": "Keyboard",
+      "forceShow": true,
+      "forceConnected": true,
+      "notes": "Keyboard is currently used over Bluetooth"
+    },
+    {
+      "stableId": "usb:VID_1532&PID_00A6",
+      "alias": "Razer Viper V2 Pro",
+      "kind": "Mouse",
+      "forceShow": true,
+      "forceConnected": true,
+      "notes": "2.4G receiver / wired USB composite device"
+    },
+    {
+      "nameContains": "XINPUT",
+      "hidden": true,
+      "notes": "Example hidden paired gamepad history interface"
+    },
+    {
+      "nameContains": "Xbox",
+      "hidden": true,
+      "notes": "Example hidden paired gamepad history interface"
+    },
+    {
+      "nameContains": "ROG OMNI RECEIVER",
+      "hidden": true,
+      "notes": "Example: receiver is plugged in, but the keyboard is currently used over Bluetooth"
+    },
+    {
+      "nameContains": "Zako Virtual Mouse",
+      "hidden": true,
+      "notes": "Example hidden virtual device"
+    }
+  ]
+}

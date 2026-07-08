@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "work", "work", "{25CD44AD-1229-4125-A6D4-FC48134E4ABD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BluetoothBattery", "BluetoothBattery", "{9A676E36-E3C9-4E8E-B2DB-272EE99D9DB4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CC45B047-73A0-45DA-A82C-8C441B3697E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BluetoothBattery.Core", "work\BluetoothBattery\src\BluetoothBattery.Core\BluetoothBattery.Core.csproj", "{59B88434-06B5-4117-8188-A14F0F0EAA0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BluetoothBattery.Cli", "work\BluetoothBattery\src\BluetoothBattery.Cli\BluetoothBattery.Cli.csproj", "{D97A0E5B-C13C-4D2B-A302-1FE446D29860}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BluetoothBattery.App", "work\BluetoothBattery\src\BluetoothBattery.App\BluetoothBattery.App.csproj", "{C1BA1526-EF01-44EA-B57C-4D4E501E5D46}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{59B88434-06B5-4117-8188-A14F0F0EAA0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59B88434-06B5-4117-8188-A14F0F0EAA0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59B88434-06B5-4117-8188-A14F0F0EAA0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59B88434-06B5-4117-8188-A14F0F0EAA0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D97A0E5B-C13C-4D2B-A302-1FE446D29860}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D97A0E5B-C13C-4D2B-A302-1FE446D29860}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D97A0E5B-C13C-4D2B-A302-1FE446D29860}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D97A0E5B-C13C-4D2B-A302-1FE446D29860}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1BA1526-EF01-44EA-B57C-4D4E501E5D46}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{C1BA1526-EF01-44EA-B57C-4D4E501E5D46}.Debug|Any CPU.Build.0 = Debug|x86
+		{C1BA1526-EF01-44EA-B57C-4D4E501E5D46}.Release|Any CPU.ActiveCfg = Release|x86
+		{C1BA1526-EF01-44EA-B57C-4D4E501E5D46}.Release|Any CPU.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9A676E36-E3C9-4E8E-B2DB-272EE99D9DB4} = {25CD44AD-1229-4125-A6D4-FC48134E4ABD}
+		{CC45B047-73A0-45DA-A82C-8C441B3697E1} = {9A676E36-E3C9-4E8E-B2DB-272EE99D9DB4}
+		{59B88434-06B5-4117-8188-A14F0F0EAA0F} = {CC45B047-73A0-45DA-A82C-8C441B3697E1}
+		{D97A0E5B-C13C-4D2B-A302-1FE446D29860} = {CC45B047-73A0-45DA-A82C-8C441B3697E1}
+		{C1BA1526-EF01-44EA-B57C-4D4E501E5D46} = {CC45B047-73A0-45DA-A82C-8C441B3697E1}
+	EndGlobalSection
+EndGlobal

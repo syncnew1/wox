@@ -1,0 +1,22 @@
+/.agents
+/.codex
+
+# Local SDK/runtime caches
+/work/.dotnet/
+/work/.dotnet-home/
+/work/.nuget/
+/work/.appdata/
+/work/dotnet-install.ps1
+
+# Build outputs
+**/bin/
+**/obj/
+
+# Local diagnostics / generated outputs
+/outputs/
+
+# User/editor files
+*.user
+*.suo
+*.rsuser
+.vs/
