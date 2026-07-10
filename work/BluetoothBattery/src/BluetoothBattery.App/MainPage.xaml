@@ -162,6 +162,15 @@
         </ListView>
 
         <TextBlock
+            x:Name="EmptyStateText"
+            Grid.Row="3"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="未发现高置信度在线无线设备"
+            Visibility="Collapsed" />
+
+        <TextBlock
             x:Name="StatusText"
             Grid.Row="4"
             Foreground="{ThemeResource TextFillColorSecondaryBrush}"

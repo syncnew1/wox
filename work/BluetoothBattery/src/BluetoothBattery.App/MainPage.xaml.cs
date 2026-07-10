@@ -96,16 +96,19 @@ public sealed partial class MainPage : Page
             ConnectedCountText.Text = summary.Connected.ToString();
             BatteryCountText.Text = summary.WithBattery.ToString();
             DeviceList.ItemsSource = devices.Select(DeviceRow.FromSnapshot).ToArray();
+            EmptyStateText.Visibility = devices.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
             LastRefreshText.Text = $"上次刷新：{DateTime.Now:T}";
             StatusText.Text = $"只读模式 · 配置：{configPath}";
         }
         catch (OperationCanceledException)
         {
+            EmptyStateText.Visibility = Visibility.Collapsed;
             StatusText.Text = "刷新超时：设备可能正在休眠或被系统驱动占用。";
         }
         catch (Exception ex)
         {
+            EmptyStateText.Visibility = Visibility.Collapsed;
             StatusText.Text = $"扫描失败：{ex.Message}";
         }
         finally
@@ -158,7 +161,7 @@ public sealed record DeviceRow(
             : device.Battery.Source;
         var meta = device.Battery is null
             ? TranslatePresence(device.Presence)
-            : $"{TranslateConfidence(device.Battery.Confidence)} · {device.Battery.ReadAt:HH:mm:ss}";
+            : $"{TranslateBatteryStatus(device.Battery.Percentage)} · {TranslateConfidence(device.Battery.Confidence)} · {device.Battery.ReadAt:HH:mm:ss}";
 
         return new DeviceRow(
             device.DisplayName,
@@ -192,6 +195,17 @@ public sealed record DeviceRow(
             BluetoothBattery.Core.Models.BatteryConfidence.Cached => "缓存",
             BluetoothBattery.Core.Models.BatteryConfidence.Unknown => "未知可信度",
             _ => confidence.ToString()
+        };
+    }
+
+    private static string TranslateBatteryStatus(int percentage)
+    {
+        return percentage switch
+        {
+            <= 10 => "电量极低",
+            <= 25 => "电量偏低",
+            >= 95 => "接近满电",
+            _ => "电量正常"
         };
     }
 }

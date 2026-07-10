@@ -76,40 +76,55 @@ public sealed class PnpDeviceScanner
     private const string FastScanScript = """
             [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
             $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-            $ErrorActionPreference = 'SilentlyContinue'
+            $ErrorActionPreference = 'Stop'
 
             $classes = @('Bluetooth', 'HIDClass', 'Mouse', 'Keyboard', 'AudioEndpoint', 'Media', 'Battery', 'USB')
             $deviceMap = [ordered]@{}
+            $queryErrors = New-Object System.Collections.Generic.List[string]
+
             foreach ($class in $classes) {
-              Get-PnpDevice -Class $class -PresentOnly -ErrorAction SilentlyContinue | ForEach-Object {
-                if ($_.InstanceId) {
-                  $deviceMap[$_.InstanceId] = [pscustomobject]@{
-                    InstanceId = $_.InstanceId
-                    Class = $_.Class
-                    FriendlyName = $_.FriendlyName
-                    Status = $_.Status
-                    Manufacturer = $null
-                    Description = $_.FriendlyName
+              try {
+                Get-PnpDevice -Class $class -PresentOnly -ErrorAction Stop | ForEach-Object {
+                  if ($_.InstanceId) {
+                    $deviceMap[$_.InstanceId] = [pscustomobject]@{
+                      InstanceId = $_.InstanceId
+                      Class = $_.Class
+                      FriendlyName = $_.FriendlyName
+                      Status = $_.Status
+                      Manufacturer = $null
+                      Description = $_.FriendlyName
+                    }
                   }
                 }
+              } catch {
+                $queryErrors.Add($_.Exception.Message)
               }
             }
 
             if ($deviceMap.Count -eq 0) {
               foreach ($class in $classes) {
-                Get-CimInstance -ClassName Win32_PnPEntity -Filter "PNPClass = '$class'" -ErrorAction SilentlyContinue | ForEach-Object {
-                  if ($_.PNPDeviceID) {
-                    $deviceMap[$_.PNPDeviceID] = [pscustomobject]@{
-                      InstanceId = $_.PNPDeviceID
-                      Class = $_.PNPClass
-                      FriendlyName = $_.Name
-                      Status = 'OK'
-                      Manufacturer = $_.Manufacturer
-                      Description = $_.Description
+                try {
+                  Get-CimInstance -ClassName Win32_PnPEntity -Filter "PNPClass = '$class'" -ErrorAction Stop | ForEach-Object {
+                    if ($_.PNPDeviceID) {
+                      $deviceMap[$_.PNPDeviceID] = [pscustomobject]@{
+                        InstanceId = $_.PNPDeviceID
+                        Class = $_.PNPClass
+                        FriendlyName = $_.Name
+                        Status = 'OK'
+                        Manufacturer = $_.Manufacturer
+                        Description = $_.Description
+                      }
                     }
                   }
+                } catch {
+                  $queryErrors.Add($_.Exception.Message)
                 }
               }
+            }
+
+            if ($deviceMap.Count -eq 0 -and ($queryErrors -match 'Access|denied|拒绝|0x80041003')) {
+              [Console]::Error.WriteLine("Windows device scan access denied. Run PowerShell as Administrator, or allow local PnP/CIM device queries. $($queryErrors -join '; ')")
+              exit 1
             }
 
             $devices = $deviceMap.Values | Where-Object {
