@@ -1,34 +1,127 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <Window
     x:Class="BluetoothBattery_App.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="using:BluetoothBattery_App"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="无线设备电量"
-    mc:Ignorable="d">
-    <Window.SystemBackdrop>
-        <MicaBackdrop />
-    </Window.SystemBackdrop>
-
-    <Grid>
+    Width="920"
+    Height="620"
+    MinWidth="760"
+    MinHeight="480"
+    Background="#F6F7F9"
+    Loaded="Window_Loaded">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TitleBar x:Name="AppTitleBar" Title="无线设备电量">
-            <TitleBar.IconSource>
-                <ImageIconSource ImageSource="Assets/AppIcon.ico" />
-            </TitleBar.IconSource>
-        </TitleBar>
+        <DockPanel LastChildFill="True">
+            <Button
+                x:Name="RefreshButton"
+                DockPanel.Dock="Right"
+                MinWidth="92"
+                Padding="12,6"
+                Click="RefreshButton_Click"
+                Content="刷新" />
 
-        <!--
-            The Frame hosts pages for your application content. Add your UI to
-            MainPage.xaml rather than here so you can use Page features such as
-            navigation events and the Loaded lifecycle.
-        -->
-        <Frame x:Name="RootFrame" Grid.Row="1" />
+            <StackPanel>
+                <TextBlock
+                    FontSize="24"
+                    FontWeight="SemiBold"
+                    Text="无线设备电量" />
+                <TextBlock
+                    Margin="0,4,0,0"
+                    Foreground="#5F6673"
+                    Text="只读识别蓝牙与 2.4G 无线设备电量，不修改设备设置" />
+            </StackPanel>
+        </DockPanel>
+
+        <UniformGrid Grid.Row="1" Margin="0,18,0,0" Columns="3">
+            <Border Margin="0,0,8,0" Padding="14" Background="White" BorderBrush="#D9DEE7" BorderThickness="1" CornerRadius="6">
+                <StackPanel>
+                    <TextBlock Foreground="#5F6673" Text="设备" />
+                    <TextBlock x:Name="DeviceCountText" FontSize="24" FontWeight="SemiBold" Text="0" />
+                </StackPanel>
+            </Border>
+
+            <Border Margin="4,0,4,0" Padding="14" Background="White" BorderBrush="#D9DEE7" BorderThickness="1" CornerRadius="6">
+                <StackPanel>
+                    <TextBlock Foreground="#5F6673" Text="已连接" />
+                    <TextBlock x:Name="ConnectedCountText" FontSize="24" FontWeight="SemiBold" Text="0" />
+                </StackPanel>
+            </Border>
+
+            <Border Margin="8,0,0,0" Padding="14" Background="White" BorderBrush="#D9DEE7" BorderThickness="1" CornerRadius="6">
+                <StackPanel>
+                    <TextBlock Foreground="#5F6673" Text="电量已知" />
+                    <TextBlock x:Name="BatteryCountText" FontSize="24" FontWeight="SemiBold" Text="0" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <DockPanel Grid.Row="2" Margin="0,14,0,10">
+            <CheckBox
+                x:Name="AutoRefreshCheckBox"
+                DockPanel.Dock="Left"
+                Margin="0,0,18,0"
+                VerticalAlignment="Center"
+                Checked="AutoRefreshCheckBox_Changed"
+                Content="自动刷新"
+                IsChecked="True"
+                Unchecked="AutoRefreshCheckBox_Changed" />
+
+            <ProgressBar
+                x:Name="RefreshProgress"
+                DockPanel.Dock="Left"
+                Width="120"
+                Height="10"
+                Margin="0,0,14,0"
+                IsIndeterminate="True"
+                Visibility="Collapsed" />
+
+            <TextBlock
+                x:Name="LastRefreshText"
+                VerticalAlignment="Center"
+                Foreground="#5F6673"
+                Text="尚未刷新" />
+        </DockPanel>
+
+        <Border Grid.Row="3" Background="White" BorderBrush="#D9DEE7" BorderThickness="1" CornerRadius="6">
+            <Grid>
+                <ListView
+                    x:Name="DeviceList"
+                    BorderThickness="0"
+                    ItemsSource="{Binding Devices}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Width="260" Header="设备" DisplayMemberBinding="{Binding Name}" />
+                            <GridViewColumn Width="110" Header="类型" DisplayMemberBinding="{Binding Kind}" />
+                            <GridViewColumn Width="90" Header="电量" DisplayMemberBinding="{Binding Battery}" />
+                            <GridViewColumn Width="180" Header="来源" DisplayMemberBinding="{Binding BatterySource}" />
+                            <GridViewColumn Width="190" Header="状态" DisplayMemberBinding="{Binding BatteryMeta}" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <TextBlock
+                    x:Name="EmptyStateText"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="#5F6673"
+                    Text="未发现高置信度在线无线设备"
+                    Visibility="Collapsed" />
+            </Grid>
+        </Border>
+
+        <TextBlock
+            x:Name="StatusText"
+            Grid.Row="4"
+            Margin="0,12,0,0"
+            Foreground="#5F6673"
+            Text="就绪"
+            TextTrimming="CharacterEllipsis" />
     </Grid>
 </Window>

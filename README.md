@@ -13,7 +13,7 @@ Windows 无线设备电量识别软件。
 - 支持读取标准 BLE GATT Battery Service，也就是 `0000180F` 服务里的 `00002A19` Battery Level 特征。
 - 已加入电量 Provider 架构，后续可以继续接入 HID 电池报告、Razer/ROG/Logitech 等厂商电量查询协议。
 - 支持导出诊断 JSON，方便分析设备识别和兼容性问题。
-- 已创建 WinUI 3 桌面应用，支持手动刷新、自动刷新、显示电量来源和可信度。
+- 已创建 WPF 桌面应用，支持手动刷新、自动刷新、显示电量来源和可信度。
 - 项目边界：只读取电量，不修改灯效、DPI、宏、轮询率、固件或设备配置。
 
 ## 项目结构
@@ -124,25 +124,25 @@ work/BluetoothBattery/
 .\work\BluetoothBattery\scripts\build.ps1
 ```
 
-安装 WinUI 模板：
+历史脚本：如果后续重新尝试 WinUI 3 界面，可安装 WinUI 模板；当前默认桌面应用不需要这一步：
 
 ```powershell
 .\work\BluetoothBattery\scripts\install-winui-templates.ps1
 ```
 
-构建 WinUI 应用：
+构建桌面应用：
 
 ```powershell
 .\work\BluetoothBattery\scripts\build-winui.ps1
 ```
 
-运行 WinUI 应用：
+运行桌面应用：
 
 ```powershell
 .\work\BluetoothBattery\scripts\run-winui.ps1
 ```
 
-发布 WinUI 应用到 `outputs\BluetoothBattery.App`：
+发布桌面应用到 `outputs\BluetoothBattery.App`。发布包是 WPF `win-x64` 自包含模式，会携带 .NET 8 运行时，避免目标机器弹出“安装/更新 .NET 8.0”的提示：
 
 ```powershell
 .\work\BluetoothBattery\scripts\publish-winui.ps1
@@ -154,13 +154,21 @@ work/BluetoothBattery/
 .\outputs\BluetoothBattery.App\BluetoothBattery.App.exe
 ```
 
+注意：不要只复制单个 exe。需要保留 `outputs\BluetoothBattery.App` 目录里的 DLL 和 runtime 文件，直接在该目录中运行 `BluetoothBattery.App.exe`。
+
+如果双击后没有正常显示，先查看发布目录日志：
+
+```powershell
+Get-Content .\outputs\BluetoothBattery.App\app.log -Tail 80
+```
+
 ## 重要说明
 
 默认扫描模式较快，主要用于列出真实用户设备。`-Deep` 会额外尝试读取 Windows PnP 电量属性，部分机器或设备上可能较慢。
 
 如果 CLI 或 App 提示 Windows 设备扫描被拒绝访问，请使用管理员 PowerShell 运行，或确认本机允许 PnP/CIM 设备查询。程序遇到权限错误时会明确报错，不再把权限问题误显示为“0 个设备”。
 
-标准 BLE 电量服务已经可用。如果蓝牙设备支持 `0000180F/00002A19`，CLI 和 WinUI 会优先显示该电量。很多 2.4G 接收器和部分设备不会通过 Windows 标准属性公开电量。对于这类设备，需要后续实现厂商只读电量查询 Provider，例如 Razer、ASUS ROG、Logitech HID++ 等。
+标准 BLE 电量服务已经可用。如果蓝牙设备支持 `0000180F/00002A19`，CLI 和桌面应用会优先显示该电量。很多 2.4G 接收器和部分设备不会通过 Windows 标准属性公开电量。对于这类设备，需要后续实现厂商只读电量查询 Provider，例如 Razer、ASUS ROG、Logitech HID++ 等。
 
 Razer Viper V2 Pro 当前已完成 OpenRazer 协议调研和 Windows HID 候选接口诊断。Windows 上正确 HID 接口会被系统或 Razer 驱动拒绝直接打开，因此不会默认触发该实验查询；后续应优先研究 `RZCONTROL/RzCommon` 的只读电量查询路径。
 

@@ -13,16 +13,25 @@ $env:LOCALAPPDATA = Join-Path $workspaceRoot 'work\.appdata\local'
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 
+$resolvedPublishParent = Resolve-Path (Split-Path -Parent $publishDir)
+$expectedPublishRoot = Join-Path $workspaceRoot 'outputs'
+if ($resolvedPublishParent.Path -ne $expectedPublishRoot) {
+    throw "Unexpected publish directory: $publishDir"
+}
+
+if (Test-Path $publishDir) {
+    Remove-Item -LiteralPath $publishDir -Recurse -Force
+}
+
 New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
+
+$selfContained = $true
 
 & $dotnet publish $project `
     --configuration Release `
     --runtime win-x64 `
-    --self-contained false `
+    --self-contained $selfContained `
     --configfile $nugetConfig `
-    -p:WindowsPackageType=None `
-    -p:EnableMsixTooling=false `
-    -p:GenerateAppxPackageOnBuild=false `
     -p:PublishSingleFile=false `
     -p:PublishTrimmed=false `
     -p:PublishReadyToRun=false `
@@ -35,3 +44,4 @@ if ($LASTEXITCODE -ne 0) {
 $exe = Join-Path $publishDir 'BluetoothBattery.App.exe'
 Write-Host "Published to: $publishDir"
 Write-Host "Run: $exe"
+Write-Host "Mode: WPF self-contained win-x64"

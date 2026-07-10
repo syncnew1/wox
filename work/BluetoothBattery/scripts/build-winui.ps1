@@ -13,4 +13,4 @@ $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = '1'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 
 & $dotnet restore $project --configfile $nugetConfig
-& $dotnet build $project --no-restore -v minimal -p:WindowsPackageType=None -p:EnableMsixTooling=false -p:GenerateAppxPackageOnBuild=false
+& $dotnet build $project --no-restore -v minimal
